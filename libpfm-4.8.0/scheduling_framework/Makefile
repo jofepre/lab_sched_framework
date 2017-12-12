@@ -47,7 +47,7 @@ all: $(TARGETS) scheduling_framework
 #scheduling_framework: scheduling_framework.o sf_performance_monitoring.o sf_process_selection.o sf_process_allocation.o
 
 scheduling_framework: scheduling_framework.o sf_auxiliar.o sf_performance_monitoring.o sf_process_selection.o sf_process_allocation.o
-	$(CC) $(CFLAGS) -o $@ $(LDFLAGS) $? $(LPC_UTILS) $(PFMLIB) $(LIBS) 
+	$(CC) $(CFLAGS) -o $@ $(LDFLAGS) $^ $(LPC_UTILS) $(PFMLIB) $(LIBS) 
 
 rtop: rtop.o $(PFMLIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -D_GNU_SOURCE -o $@ $^ $(LIBS)  -lpthread -lncurses -lm
