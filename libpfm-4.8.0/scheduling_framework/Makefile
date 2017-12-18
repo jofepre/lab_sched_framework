@@ -46,6 +46,10 @@ all: $(TARGETS) scheduling_framework
 #
 #scheduling_framework: scheduling_framework.o sf_performance_monitoring.o sf_process_selection.o sf_process_allocation.o
 
+sf_auxiliar.o: sf_auxiliar.c sf_auxiliar.h
+sf_performance_monitoring.o: sf_performance_monitoring.c sf_performance_monitoring.h sf_auxiliar.h
+sf_process_allocation.o: sf_process_allocation.c sf_process_allocation.h sf_auxiliar.h
+
 scheduling_framework: scheduling_framework.o sf_auxiliar.o sf_performance_monitoring.o sf_process_selection.o sf_process_allocation.o
 	$(CC) $(CFLAGS) -o $@ $(LDFLAGS) $^ $(LPC_UTILS) $(PFMLIB) $(LIBS) 
 
