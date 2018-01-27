@@ -66,7 +66,7 @@ should also be updated according to the experimental platform. To measure the
 target number of instructions, set this number to a very high number (e.g., 
 100000000000) and limit the time of the execution:
 
-./scheduling_framework -N 1 -C 0 -W0 -d 200 -p -T 20
+./scheduling_framework -N 1 -C 0 -W 0 -d 200 -p -T 20
 
 where the -T 20 options limits the execution to 20 seconds. The number of 
 instructions of this run should be used to updated the target number of 
