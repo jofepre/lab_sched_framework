@@ -74,6 +74,7 @@ void process_allocation (int all_p) {
         
         for (aux = running_queue.head; aux; aux = aux->sig) {
             aux->selected = 0;
+            fprintf(stderr, "App %d_%d -> BW L1 %.3f\n", aux->benchmark, aux->id, aux->BW_L1);
         }
         
         sel = find_max_BW_L1 ();
@@ -82,7 +83,7 @@ void process_allocation (int all_p) {
                                             // For instance, when the available cores are 0,1,2,3 it is understood that 0-1 are one SMT core and 2-3 are the other SMT core
         
         sel = find_min_BW_L1 ();
-        assign_node_to_core (sel, 1);
+        assign_node_to_core (sel, 1);       // Assigns the application with minimum L1 bandwidth to the second logica cpu (same core)
         
         assign_remaining_applications ();
     }
@@ -95,15 +96,23 @@ void process_allocation (int all_p) {
     else if (all_p == 2) {
         
         
-        // **
-        //
-            // LAB5: IMPLEMENT DE L1 BANDWIDTH-AWARE PROCESS ALLOCATION POLICY HERE
-        //
-        // **
+        for (aux = running_queue.head; aux; aux = aux->sig) {
+            aux->selected = 0;
+        }
+        
+        sel = find_max_BW_L1 ();
+        assign_node_to_core (sel, 0);       // Not actually core 0, but the first core of the pattern provided through the input parameter
+                                            // With SMT cores, the two logical CPUs that correspond to the same core should be consecutive
+                                            // For instance, when the available cores are 0,1,2,3 it is understood that 0-1 are one SMT core and 2-3 are the other SMT core
+        
+        sel = find_max_BW_L1 ();
+        assign_node_to_core (sel, 1);       // Assigns the second application with higher L1 bandwidth to the second logical cpu (same core)
+        
+        assign_remaining_applications ();
     
-    
+        
     }
-    
+
     else {
         fprintf(stderr, "ERROR!! Process selection policy (%d) not available.\n", all_p);
         exit (0);
@@ -125,7 +134,7 @@ void allocate_jobs_to_cores () {
     for (aux = running_queue.head; aux; aux = aux->sig) {
         CPU_ZERO(&mask);
         for (i = 0; i < aux->n_cores; i++) {
-            //fprintf(stderr, "Process %d_%d al core %d\n", aux->benchmark, aux->id, aux->cores[i]);
+            fprintf(stderr, "Process %d_%d al core %d\n", aux->benchmark, aux->id, aux->cores[i]);
             CPU_SET(aux->cores[i], &mask);
         }
         

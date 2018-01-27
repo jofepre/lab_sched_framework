@@ -74,11 +74,55 @@ void process_selection (int sel_p) {
     else if (sel_p == 2) {
         
         
-        // **
-        //
-        // LAB4: IMPLEMENT A MAIN MEMORY BANDWIDTH-AWARE PROCESS SELECTION POLICY HERE
-        //
-        // **
+        //fprintf(stderr, "Quantum %d\n", quantum);
+        
+        bw_remain = calculate_avg_MM_BW_per_quantum();          // Set BW remain to the average bandwidth utilization per quantum
+        
+        if (quantum > 5 && bw_remain == 0) {                    // Safety check
+            fprintf(stderr, "Error. BW remain is not being updated.\n");
+            exit (-1);
+        }
+        
+        cpu_remain = num_cores;                         // Set cpu_remain to the number of availabel cpus, unless the number of processes is below this number
+        if (process_queue.N < cpu_remain) {
+            cpu_remain = process_queue.N;
+        }
+        
+        //fprintf(stderr, "BW_remain: %.3f\n", bw_remain);
+        //fprintf(stderr, "Cpu_reamin: %d\n", cpu_remain);
+        
+        
+        // The first process of the process_queue is always selected to avoid starvation
+        //fprintf(stderr, "First selected process: %d_%d\n", process_queue.head->benchmark, process_queue.head->id);
+        aux = process_queue.head;
+        bw_remain -= aux->BW_MM;
+        cpu_remain --;
+        pull_node (&process_queue, aux);
+        insert_node (&running_queue, aux);
+        
+        //fprintf(stderr, "Bw_remain: %.3f - Cpu remain %d\n", bw_remain, cpu_remain);
+        
+        
+        // The remaining processes are selected according to their fit to the remaining bandwdith per core
+        while (cpu_remain) {
+            
+            max_fitness = -1;
+            max_node = process_queue.head;                              // Avoid max_node = NULL in the firs quanta
+            for (aux = process_queue.head; aux; aux = aux->sig) {
+                fit = fitness(bw_remain, aux->BW_MM, cpu_remain);      // We look for the higher fit
+                if (fit > max_fitness) {
+                    max_fitness = fit;
+                    max_node = aux;
+                }
+            }
+            
+            // Insert the selected node in the running_queue and update bw_remain and cpu_remain
+            //fprintf(stderr, "Process %d_%d selected\n", max_node->benchmark, max_node->id);
+            pull_node (&process_queue, max_node);
+            bw_remain -= max_node->BW_MM;
+            cpu_remain--;
+            insert_node (&running_queue, max_node);
+        }
         
         
     }

@@ -102,10 +102,11 @@ void update_metrics (node *n) {
     // LAB4: UPDATE THE MAIN MEMORY BANDWIDTH HERE
     // **
     
-    n->BW_MM = 0;
+    n->BW_MM = (double) n->events_q [2] / (double) n->cycles_q * CPU_FREQ;
+    n->BW_L1 = (double) (n->events_q [3] + n->events_q [4]) / (double) n->cycles_q * CPU_FREQ;
     
     
-    //fprintf(stderr, "Application %d_%d -- IPC: %.2f BW_L1 %.2f BW_MM %.2f\n", n->benchmark, n->id, n->quantum_IPC, n->BW_L1, n->BW_MM);
+    fprintf(stderr, "Application %d_%d -- IPC: %.2f BW_L1 %.2f BW_MM %.2f\n", n->benchmark, n->id, n->quantum_IPC, n->BW_L1, n->BW_MM);
 }
 
 

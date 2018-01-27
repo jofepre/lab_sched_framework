@@ -165,7 +165,7 @@ int launch_process (node *node) {
             waitpid(pid, &(node->status), WUNTRACED);
             if (WIFEXITED(node->status)) {
                 fprintf(stderr, "ERROR: command process %d exited too early with status %d\n", pid, WEXITSTATUS(node->status));
-                return -2;
+                exit (-2);
             }
                         
             return 1;
@@ -355,6 +355,10 @@ int main(int argc, char **argv) {
     // If the list of events is not provided as an input parameter, set a default events to be monitored
     if (string_events == NULL) {
 
+        //options.events = strdup("cycles,instructions");
+        
+        options.events = strdup("UNHALTED_CORE_CYCLES,INSTRUCTIONS_RETIRED,LLC_MISSES,PERF_COUNT_HW_CACHE_L1D:ACCESS,PERF_COUNT_HW_CACHE_L1D:MISS");
+        
         // **
         // IMPORTANT NOTE: events 0 and 1 need to be set to cycles and instructions, respectively,
         // to allow the scheduler to keep track of the instructions exectued by each application and 
@@ -401,7 +405,6 @@ int main(int argc, char **argv) {
         // Event3 set to L1 misses
         // **
 
-        options.events = strdup("cycles,instructions");
     }
     else {
         options.events = set_event_string (string_events);
