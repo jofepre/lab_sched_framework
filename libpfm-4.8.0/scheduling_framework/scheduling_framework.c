@@ -69,30 +69,26 @@ double alone_IPC [] = {
 // **
 // This function allocates the memory for the available_cores array and sets it from the input parameters
 // **
-void initialize_available_cores(char *s_cores) {
+int initialize_available_cores(char *s_cores, int n_apps) {
 
     int i=0, j=0;
     char *p;
     
-    if (num_cores > MAX_CPUS) {
-        fprintf(stderr, "Error! The maximum number of supported cores is %d\n", MAX_CPUS); // It can be increased by modifying the MAX_CPUS define
-        exit(-1);
-    }
-
-    available_cores = (int *) malloc (sizeof (int) * num_cores);
+    available_cores = (int *) malloc (sizeof (int) * MAX_CPUS);
     if (available_cores == NULL) {
         fprintf(stderr, "Error allocating the memory for the available_cores array.\n");
         exit (-1);
     }
 
-    if (s_cores == NULL) { // If no set of cores defined as input parameter take consecutive cores
-        for (i=0; i<num_cores; i++) {
+    if (s_cores == NULL) { // If no set of cores defined as input parameter take N consecutive cores
+        for (i=0; i < n_apps; i++) {
             available_cores [i] = j;
             j++;
         }
     }
 
-    else {        
+    else {
+        
         for (p = strtok(s_cores, ","); p; p = strtok(NULL, ",;")) {
 
             if (i == num_cores) {
@@ -103,18 +99,20 @@ void initialize_available_cores(char *s_cores) {
             available_cores [i] = atoi(p);
             i++;
         }
-
-        if (i < num_cores) {
-            fprintf(stderr, "Error! The list of available cores does not match the defined number of cores.\n");
-            exit (-1);
-        }  
+    }
+    
+    if (i > MAX_CPUS) {
+        fprintf(stderr, "Error! The maximum number of supported cores is %d\n", MAX_CPUS); // It can be increased by modifying the MAX_CPUS define
+        exit(-1);
     }
 
     fprintf(stderr, "The set of available cores is: ");
-    for (i=0; i<num_cores; i++) {
-        fprintf(stderr, "%d ", available_cores[i]);
+    for (j=0; j < i; j++) {
+        fprintf(stderr, "%d ", available_cores[j]);
     }
     fprintf(stderr, "\n");
+    
+    return i;
 }
 
 
@@ -176,6 +174,29 @@ int launch_process (node *node) {
 
 
 // **
+// Sets the events to be monitored adding cycles and instructions before the provided events
+// **
+char* set_event_string(const char *str2) {
+    int str1_len, str2_len;
+    char *str1;
+    char *new_str;
+    
+    str1 = strdup ("cycles,instructions,");
+    str1_len = strlen(str1);
+    str2_len = strlen(str2);
+        
+    new_str = malloc(str1_len + str2_len + 1);
+        
+    memcpy(new_str, str1, str1_len);
+    memcpy(new_str + str1_len, str2, str2_len + 1);
+        
+    fprintf(stderr, "Events to monitor: CYCLES,INSTRUCTIONS,%s\n\n", str2);
+    
+    return new_str;
+}
+
+
+// **
 // Initialize the workload to be run
 // **
 int initialize_workload (char *wk_string) {
@@ -197,6 +218,9 @@ int initialize_workload (char *wk_string) {
         }
 
         workload [i] = atoi(p);
+        if (workload [i] < 0 || workload [i] > MAX_APPS) {
+            fprintf(stderr, "Error. Benchmark with index %d not set\n", workload[i]);
+        }
         i++;
     }
     
@@ -257,10 +281,11 @@ int main(int argc, char **argv) {
     
     char *string_cores = NULL;
     char *string_wk = NULL;
+    char *string_events = NULL;
 
     
     // Initilization of variables
-    num_cores = 2;                  // Default: use two logical cores
+    num_cores = MAX_CPUS;           // Default: use MAX_CPU defines as the number of available cores
     quantum = 0;
     print_per_quantum = 0;          // Determines if the event counts should be printed every quantum
     
@@ -272,7 +297,7 @@ int main(int argc, char **argv) {
         return 0;
     }
     
-    while ((c=getopt(argc, argv,"he:d:A:W:S:N:C:T:p")) != -1) {
+    while ((c=getopt(argc, argv,"he:d:A:W:S:C:T:p")) != -1) {
         switch(c) {
             case 'A':
                 allocation_policy = atoi(optarg);
@@ -287,15 +312,12 @@ int main(int argc, char **argv) {
                 usage();
                 exit(0);
             case 'e':
-            	options.events = optarg;
+            	string_events = optarg;
             	break;
             case 'W':
                 string_wk = optarg;
                 break;
-            case 'N':
-				num_cores = atoi (optarg);
-				break;
-             case 'C':
+            case 'C':
                 string_cores = optarg;
                 break;
              case 'T':
@@ -321,17 +343,17 @@ int main(int argc, char **argv) {
         allocation_policy = 0;
     }    
 
-
-    // Initialize the set of cores to be used
-    initialize_available_cores(string_cores);
-
-    // Initialize workload   
-    N = initialize_workload (string_wk); 
     
+    // Initialize workload
+    N = initialize_workload (string_wk);
+
+    
+    // Initialize the set of cores to be used
+    num_cores = initialize_available_cores(string_cores, N);
     
     
     // If the list of events is not provided as an input parameter, set a default events to be monitored
-    if (!options.events) {
+    if (string_events == NULL) {
 
         // **
         // IMPORTANT NOTE: events 0 and 1 need to be set to cycles and instructions, respectively,
@@ -381,6 +403,9 @@ int main(int argc, char **argv) {
 
         options.events = strdup("cycles,instructions");
     }
+    else {
+        options.events = set_event_string (string_events);
+    }
     
     
     // Check and correct quantum length
@@ -428,14 +453,15 @@ int main(int argc, char **argv) {
     
 
     // Print the process queue
-    fprintf(stderr, "PROCESS QUEUE: \n");
-    print_queue(&process_queue);
+    //fprintf(stderr, "PROCESS QUEUE: \n");
+    //print_queue(&process_queue);
     
 
     // Launch the applications
     for(aux = process_queue.head; aux; aux = aux->sig) {
         launch_process (aux);
     }
+    fprintf(stderr, "\n");
     
     // Starting time marks for the execution time and scheduling overhead
     gettimeofday(&tv, &tz);
@@ -447,11 +473,16 @@ int main(int argc, char **argv) {
     // MAIN LOOP
     do {                
 
+        //fprintf(stderr, "Quantum %d\n", quantum);
+        
         process_selection (selection_policy);
         
-        process_allocation (allocation_policy);        
+        
+        process_allocation (allocation_policy);
+        
         
         measure();
+        
         
         // For each process run during the last quantum
         for (aux = running_queue.head; aux; aux = sig) {

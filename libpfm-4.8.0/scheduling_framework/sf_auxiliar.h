@@ -53,7 +53,7 @@
 
 #define MAX_CPUS 4
 #define MAX_EVENTS 6            // Depends on the number of performance counters available
-#define MAX_APPS 24
+#define MAX_APPS 3
 #define CPU_FREQ 2700
 
 

@@ -34,6 +34,10 @@ void process_allocation (int all_p) {
     
     safety_checks_PA (all_p);                          // This function simply controls the the workload and cores available fit the requirements of the implented policies
     
+    for (aux = running_queue.head; aux; aux = aux->sig) {
+        aux->selected = 0;
+    }
+    
     // **
     // 0
     // Process are randomly allocated on the cores
@@ -87,24 +91,17 @@ void process_allocation (int all_p) {
     // **
     // L1-bandwidth aware process allocation
     // Unbalances the L1 requests among the cores
-    // Only supports four applications and two SMT cores
-    // TO EDIT: it can be removed and ask its developement to students
     // **
     else if (all_p == 2) {
         
-        for (aux = running_queue.head; aux; aux = aux->sig) {
-            aux->selected = 0;
-        }
         
-        sel = find_max_BW_L1 ();
-        assign_node_to_core (sel, 0);       // Not actually core 0, but the first core of the pattern provided through the input parameter
-                                            // With SMT cores, the two logical CPUs that correspond to the same core should be consecutive
-                                            // For instance, when the available cores are 0,1,2,3 it is understood that 0-1 are one SMT core and 2-3 are the other SMT core
-        
-        sel = find_max_BW_L1 ();            // Notice it assigns the two applications with higher L1 bandwidth utilization to the same core
-        assign_node_to_core (sel, 1);
-        
-        assign_remaining_applications ();
+        // **
+        //
+            // LAB5: IMPLEMENT DE L1 BANDWIDTH-AWARE PROCESS ALLOCATION POLICY HERE
+        //
+        // **
+    
+    
     }
     
     else {
@@ -190,7 +187,7 @@ void assign_node_to_core (node *n, int core) {
 
 // **
 // This function assigns the remaining applications (not yet assigned to a core) of the running_queue to the second core
-// To simplify the lab, its made to work with two cores and four apps. Thus, the remaining to apps are assigned to cores 2 and 3 of the available cores array
+// To simplify the lab, its made to work with two cores and four apps. Thus, the remaining two apps are assigned to cores 2 and 3 of the available cores array
 // **
 void assign_remaining_applications () {
     int i = 2;
