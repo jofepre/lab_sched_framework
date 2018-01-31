@@ -5,9 +5,10 @@
 #define N 196608 
 #define M 512 
 
+char A[N][M];
+
 int main (int argc, char *argv[]) {
-  int i, j, k;
-  char A[N][M];
+  int i, j, k;  
   int nop;
   int iter;
   unsigned long n=0;
