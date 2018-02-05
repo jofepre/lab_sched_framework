@@ -1,0 +1,8 @@
+Please, notice that the lab booklets and the source code of the scheduling framework are not ready to directly deliver to students. 
+
+As indicated in the REAME file at Scheduling_framework/libpfm-4.8.0/scheduling_framework/ the scheduling some small modifications to run on a target system. Mainly, it requires the commands of the benchmarks to be added or updated to find the correct path to their binaries and input data, and the target number of instructions to be run by each benchmark also need to be set. Other small changes such as the define for the processor frequency (used to calculate the bandwidth) might also need to be updated. 
+
+Regarding the booklets, they should update the instructions to set the lab since they currently clone the git hub repository of the lab, but as discussed before the benchmarks binaries and input data should be added, and the commands and target number of instructions for the applications.
+
+Consequently, we recommend advisors to provide a tar file including the updated version of the framework source code (plus binaries and input files for the benchmarks) and the booklet with the correct setup instructions.
+
